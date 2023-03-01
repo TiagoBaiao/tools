@@ -20,13 +20,13 @@ def config_logger():
     ]
   )
 
-# Get the list of media files from the input directory path, based on the MEDIA_EXTENSIONS array
-def get_media_files(path):
+# Get the list of media files from the input directory path, based on the input media types array
+def get_media_files(path, media_types):
   for file in os.listdir(path):
     if os.path.isfile(os.path.join(path, file)):
       filename, file_extension = os.path.splitext(file)
 
-      if file_extension in MEDIA_EXTENSIONS:
+      if file_extension in media_types:
         yield file
 
 # Safely move files from one directory to another, by avoiding name clashes in the destination directory
@@ -45,11 +45,11 @@ def safe_move(file_path, dest_path):
   shutil.move(file_path, os.path.join(dest_path, file_name))
 
 # Iterate over all media files in the directory to organise
-def organise_media(dir):
+def organise_media(dir, media_types):
   file_count = 0
   logging.info('Starting to organise files in: ' + dir + '...')
 
-  for file in get_media_files(dir):
+  for file in get_media_files(dir, media_types):
     creation_epoch = os.stat(os.path.join(dir, file)).st_mtime
     creation_date = time.strftime('%Y-%m_%B-%d', time.localtime(creation_epoch))
 
@@ -67,12 +67,12 @@ def organise_media(dir):
   logging.info('Finished moving ' + str(file_count) + ' files!')
 
 # Handles confirmation prompt answer by the user by either organising the media files in the input directory in different folders, or aborting the script
-def handle_prompt_answer(answer, dir):
+def handle_prompt_answer(answer, dir, media_types):
   print('')
 
   if answer.lower() in ["yes"]:
     try:
-      organise_media(dir)
+      organise_media(dir, media_types)
     except Exception as e:
       logging.error(e, exc_info=True)
   else:
@@ -84,6 +84,7 @@ def handle_prompt_answer(answer, dir):
 def main():
   print('')
   target_dir = DIR_TO_ORGANISE
+  media_types = MEDIA_EXTENSIONS
 
   config_logger()
   logging.info('Starting the organise_media script...')
@@ -91,7 +92,7 @@ def main():
   if os.path.isdir(target_dir):
     # Confirmation prompt
     answer = input('\nWill organise all files in: "' + target_dir + '" by creation_date in "year/month/" directories.\nType [yes] to continue, or something else to abort\n\n>> ')
-    handle_prompt_answer(answer, target_dir)
+    handle_prompt_answer(answer, target_dir, media_types)
   else:
     logging.error('The configured directory to organise: ' + target_dir + ', does not exist. Script aborted...')
 
