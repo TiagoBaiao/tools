@@ -94,7 +94,8 @@ def main():
     answer = input('\nWill organise all files in: "' + target_dir + '" by creation_date in "year/month/" directories.\nType [yes] to continue, or something else to abort\n\n>> ')
     handle_prompt_answer(answer, target_dir, media_types)
   else:
-    logging.error('The configured directory to organise: ' + target_dir + ', does not exist. Script aborted...')
+    logging.error('The configured directory to organise: ' + target_dir + ', does not exist. Script aborted.')
+    input('\nPress any key to exit...')
 
   logging.info('Done!')
 
