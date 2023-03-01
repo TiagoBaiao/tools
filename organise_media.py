@@ -66,13 +66,13 @@ def organise_media(dir):
 
   logging.info('Finished moving ' + str(file_count) + ' files!')
 
-# Handles confirmation prompt answer by the user by either organising the media files in folders or aborting the script
-def handle_prompt_answer(answer):
+# Handles confirmation prompt answer by the user by either organising the media files in the input directory in different folders, or aborting the script
+def handle_prompt_answer(answer, dir):
   print('')
 
   if answer.lower() in ["yes"]:
     try:
-      organise_media(DIR_TO_ORGANISE)
+      organise_media(dir)
     except Exception as e:
       logging.error(e, exc_info=True)
   else:
@@ -83,16 +83,17 @@ def handle_prompt_answer(answer):
 # Main script logic
 def main():
   print('')
+  target_dir = DIR_TO_ORGANISE
 
   config_logger()
   logging.info('Starting the organise_media script...')
 
-  if os.path.isdir(DIR_TO_ORGANISE):
+  if os.path.isdir(target_dir):
     # Confirmation prompt
-    answer = input('\nWill organise all files in: "' + DIR_TO_ORGANISE + '" by creation_date in "year/month/" directories.\nType [yes] to continue, or something else to abort\n\n>> ')
-    handle_prompt_answer(answer)
+    answer = input('\nWill organise all files in: "' + target_dir + '" by creation_date in "year/month/" directories.\nType [yes] to continue, or something else to abort\n\n>> ')
+    handle_prompt_answer(answer, target_dir)
   else:
-    logging.error('The configured directory to organise: ' + DIR_TO_ORGANISE + ', does not exist. Script aborted...')
+    logging.error('The configured directory to organise: ' + target_dir + ', does not exist. Script aborted...')
 
   logging.info('Done!')
 
