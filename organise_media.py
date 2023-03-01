@@ -38,8 +38,6 @@ def safe_move(file_path, dest_path):
   while os.path.exists(os.path.join(dest_path, file_name)):
     duplicated_file_name = True
     file_name = file_name.replace('.', '_copy.', 1)
-    #split_f_name = file_name.split('.', 1)
-    #file_name = split_f_name[0] + '_copy.' + split_f_name[1]
 
   if duplicated_file_name:
     logging.warning('Duplicated filename in destination directory: ' + dest_path + '.\n  Renamed a file to: ' + file_name)
@@ -68,6 +66,7 @@ def organise_media(dir):
 
   logging.info('Finished moving ' + str(file_count) + ' files!')
 
+# Handles confirmation prompt answer by the user by either organising the media files in folders or aborting the script
 def handle_prompt_answer(answer):
   print('')
 
