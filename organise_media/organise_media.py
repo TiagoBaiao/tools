@@ -6,7 +6,9 @@ import logging
 import yaml
 
 # TODOS
-# - Add list of folders to organise to the settings
+# - Improve confirmation prompt
+# - Improve config validation
+# - Add tests
 # - Add README (>> pip install -r requirements.txt)
 
 CONFIG_PATH = r'.\config.yaml'
@@ -42,13 +44,13 @@ def read_config_file(path):
       terminate_with_error(exception)
 
   if not isinstance(config, dict):
-    terminate_with_error('config.yaml must have a variable "folder_to_organise" of type string and a variable "media_extensions" of type array/list. Script aborted.')
+    terminate_with_error('config.yaml must have a variable "folders_to_organise" of type string and a variable "media_extensions" of type array/list. Script aborted.')
 
-  elif not 'folder_to_organise' in config or not isinstance(config['folder_to_organise'], str):
-    terminate_with_error('config.yaml must have a variable "folder_to_organise" of type string. Script aborted.')
+  elif not 'folders_to_organise' in config or not isinstance(config['folders_to_organise'], list):
+    terminate_with_error('config.yaml must have a variable "folders_to_organise" of type list. Script aborted.')
     
   elif not 'media_extensions' in config or not isinstance(config['media_extensions'], list):
-    terminate_with_error('config.yaml must have a variable "media_extensions" of type array/list. Script aborted.')
+    terminate_with_error('config.yaml must have a variable "media_extensions" of type list. Script aborted.')
     
   else:
     return config
@@ -98,15 +100,22 @@ def organise_media(dir, media_types):
 
   logging.info('Finished moving ' + str(file_count) + ' files!')
 
-# Handles confirmation prompt answer by the user by either organising the media files in the input directory in different folders, or aborting the script
-def handle_prompt_answer(answer, dir, media_types):
+# Handles confirmation prompt answer by the user by either organising the media files in the input directories in different folders, or aborting the script
+def handle_prompt_answer(answer, dirs, media_types):
   print('')
 
   if answer.lower() in ["yes"]:
-    try:
-      organise_media(dir, media_types)
-    except Exception as e:
-      logging.error(e, exc_info=True)
+    for dir in dirs:
+      if os.path.isdir(dir):
+        try:
+          organise_media(dir, media_types)
+        except Exception as e:
+          logging.error(e, exc_info=True)
+      else:
+        logging.warning('Failed to organise directory: ' + dir + '. It does not exist.')
+
+      print('')
+
   else:
     logging.info('Script aborted.')
 
@@ -120,16 +129,12 @@ def main():
   logging.info('Starting the organise_media script...')
 
   config = read_config_file(CONFIG_PATH)
-  target_dir = config['folder_to_organise']
+  target_dirs = config['folders_to_organise']
   media_types = config['media_extensions']
 
-  if os.path.isdir(target_dir):
-    # Confirmation prompt
-    answer = input('\nWill organise all files in: "' + target_dir + '" by creation_date in "year/month/" directories.\nType [yes] to continue, or something else to abort\n\n>> ')
-    handle_prompt_answer(answer, target_dir, media_types)
-  else:
-    logging.error('The configured directory to organise: ' + target_dir + ', does not exist. Script aborted.')
-    input('\nPress any key to exit...')
+  # Confirmation prompt
+  answer = input('\nWill organise all files with extension: ' + str(media_types) + ', in: ' + str(target_dirs) + ' by creation_date in "year/month/" directories.\nType [yes] to continue, or something else to abort\n\n>> ')
+  handle_prompt_answer(answer, target_dirs, media_types)
 
   logging.info('Done!')
 
