@@ -3,10 +3,13 @@ import sys
 import time
 import shutil
 import logging
+import yaml
 
+# TODOS
+# - Add list of folders to organise to the settings
+# - Add README (>> pip install -r requirements.txt)
 
-DIR_TO_ORGANISE = r'C:\test1\test2\test3'
-MEDIA_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.mp4']
+CONFIG_PATH = r'.\config.yaml'
 
 # Configure the logger to write to a file and to the console
 def config_logger():
@@ -20,6 +23,36 @@ def config_logger():
     ]
   )
 
+# Log a fatal error and exit the script
+def terminate_with_error(error_str):
+  logging.error(error_str)
+  input('\nPress any key to exit...')
+  logging.info('Done!')
+  sys.exit()
+
+# Read the configuration file
+def read_config_file(path):
+  if not os.path.exists(path):
+    terminate_with_error('Missing configuration file "config.yaml" in the same directory as "organise_media.py". Script aborted.')
+
+  with open(path) as config_file:
+    try:
+      config = yaml.safe_load(config_file)
+    except yaml.YAMLError as exception:
+      terminate_with_error(exception)
+
+  if not isinstance(config, dict):
+    terminate_with_error('config.yaml must have a variable "folder_to_organise" of type string and a variable "media_extensions" of type array/list. Script aborted.')
+
+  elif not 'folder_to_organise' in config or not isinstance(config['folder_to_organise'], str):
+    terminate_with_error('config.yaml must have a variable "folder_to_organise" of type string. Script aborted.')
+    
+  elif not 'media_extensions' in config or not isinstance(config['media_extensions'], list):
+    terminate_with_error('config.yaml must have a variable "media_extensions" of type array/list. Script aborted.')
+    
+  else:
+    return config
+
 # Get the list of media files from the input directory path, based on the input media types array
 def get_media_files(path, media_types):
   for file in os.listdir(path):
@@ -31,18 +64,17 @@ def get_media_files(path, media_types):
 
 # Safely move files from one directory to another, by avoiding name clashes in the destination directory
 # If there is a name clash, appends '_copy' to the filename (before the extension)
-def safe_move(file_path, dest_path):
-  src_dir, file_name = os.path.split(file_path)
-  duplicated_file_name = False
+def safe_move(src_file_path, dest_path):
+  src_dir, src_file_name = os.path.split(src_file_path)
+  dest_file_name = src_file_name
 
-  while os.path.exists(os.path.join(dest_path, file_name)):
-    duplicated_file_name = True
-    file_name = file_name.replace('.', '_copy.', 1)
+  while os.path.exists(os.path.join(dest_path, dest_file_name)):
+    dest_file_name = dest_file_name.replace('.', '_copy.', 1)
 
-  if duplicated_file_name:
-    logging.warning('Duplicated filename in destination directory: ' + dest_path + '.\n  Renamed a file to: ' + file_name)
+  if dest_file_name != src_file_name:
+    logging.warning('Duplicated filename in destination directory: ' + dest_path + '.\n  Renamed a file to: ' + dest_file_name)
 
-  shutil.move(file_path, os.path.join(dest_path, file_name))
+  shutil.move(src_file_path, os.path.join(dest_path, dest_file_name))
 
 # Iterate over all media files in the directory to organise
 def organise_media(dir, media_types):
@@ -83,11 +115,13 @@ def handle_prompt_answer(answer, dir, media_types):
 # Main script logic
 def main():
   print('')
-  target_dir = DIR_TO_ORGANISE
-  media_types = MEDIA_EXTENSIONS
 
   config_logger()
   logging.info('Starting the organise_media script...')
+
+  config = read_config_file(CONFIG_PATH)
+  target_dir = config['folder_to_organise']
+  media_types = config['media_extensions']
 
   if os.path.isdir(target_dir):
     # Confirmation prompt
