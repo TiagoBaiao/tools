@@ -1,0 +1,7 @@
+folder_to_organise: C:\test1\test2\test3
+
+media_extensions:
+    - .jpg
+    - .jpeg
+    - .png
+    - .mp4
