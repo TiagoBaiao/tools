@@ -1,4 +1,6 @@
-folder_to_organise: C:\test1\test2\test3
+folders_to_organise:
+    - C:\example_A\example1\example2\example3
+    - C:\example_B\example1\example2\example3
 
 media_extensions:
     - .jpg
