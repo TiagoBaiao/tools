@@ -6,8 +6,8 @@ import logging
 import yaml
 
 # TODOS
-# - Improve confirmation prompt
 # - Improve config validation
+# - Organise project folders according to typical python standards
 # - Add tests
 # - Add README (>> pip install -r requirements.txt)
 
@@ -133,7 +133,8 @@ def main():
   media_types = config['media_extensions']
 
   # Confirmation prompt
-  answer = input('\nWill organise all files with extension: ' + str(media_types) + ', in: ' + str(target_dirs) + ' by creation_date in "year/month/" directories.\nType [yes] to continue, or something else to abort\n\n>> ')
+  logging.info('Will organise all files with extension:\n- ' + "\n- ".join(media_types) + '\n\nin the following folders:\n- ' + "\n- ".join(target_dirs) + '\n\nby creation_date in "year/month/" directories.')
+  answer = input('\nType [yes] to continue, or something else to abort\n\n>> ')
   handle_prompt_answer(answer, target_dirs, media_types)
 
   logging.info('Done!')
