@@ -12,6 +12,7 @@ import yaml
 # - Add README (>> pip install -r requirements.txt)
 
 CONFIG_PATH = r'.\config.yaml'
+CONFIG_TYPES = { 'folders_to_organise': list, 'media_extensions': list }
 
 # Configure the logger to write to a file and to the console
 def config_logger():
@@ -32,6 +33,15 @@ def terminate_with_error(error_str):
   logging.info('Done!')
   sys.exit()
 
+# Validate the configuration structure
+def validate_config(config):
+  if not isinstance(config, dict):
+    terminate_with_error('The file "config.yaml" must have configuration variables defined. Script aborted.')
+
+  for key in CONFIG_TYPES:
+    if not key in config or not isinstance(config[key], CONFIG_TYPES[key]):
+      terminate_with_error('The configuration file "config.yaml" must have a variable ' + key + ' of type ' + CONFIG_TYPES[key].__name__ + '. Script aborted.')
+
 # Read the configuration file
 def read_config_file(path):
   if not os.path.exists(path):
@@ -43,17 +53,9 @@ def read_config_file(path):
     except yaml.YAMLError as exception:
       terminate_with_error(exception)
 
-  if not isinstance(config, dict):
-    terminate_with_error('config.yaml must have a variable "folders_to_organise" of type string and a variable "media_extensions" of type array/list. Script aborted.')
+  validate_config(config)
 
-  elif not 'folders_to_organise' in config or not isinstance(config['folders_to_organise'], list):
-    terminate_with_error('config.yaml must have a variable "folders_to_organise" of type list. Script aborted.')
-    
-  elif not 'media_extensions' in config or not isinstance(config['media_extensions'], list):
-    terminate_with_error('config.yaml must have a variable "media_extensions" of type list. Script aborted.')
-    
-  else:
-    return config
+  return config
 
 # Get the list of media files from the input directory path, based on the input media types array
 def get_media_files(path, media_types):
