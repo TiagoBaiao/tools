@@ -6,10 +6,8 @@ import logging
 import yaml
 
 # TODOS
-# - Improve config validation
 # - Organise project folders according to typical python standards
 # - Add tests
-# - Add README (>> pip install -r requirements.txt)
 
 CONFIG_PATH = r'.\config.yaml'
 CONFIG_TYPES = { 'folders_to_organise': list, 'media_extensions': list }
