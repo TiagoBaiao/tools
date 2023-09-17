@@ -140,4 +140,5 @@ def main():
   logging.info('Done!')
 
 # Run the script
-main()
+if __name__ == '__main__':
+  main()
