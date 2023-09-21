@@ -57,12 +57,15 @@ def read_config_file(path):
 
 # Get the list of media files from the input directory path, based on the input media types array
 def get_media_files(path, media_types):
-  for file in os.listdir(path):
-    if os.path.isfile(os.path.join(path, file)):
-      filename, file_extension = os.path.splitext(file)
+  if os.path.isdir(path):
+    for file in os.listdir(path):
+      if os.path.isfile(os.path.join(path, file)):
+        filename, file_extension = os.path.splitext(file)
 
-      if file_extension in media_types:
-        yield file
+        if file_extension in media_types:
+          yield file
+  else:
+    logging.warning('Failed to organise directory: ' + path + '. It does not exist.')
 
 # Safely move files from one directory to another, by avoiding name clashes in the destination directory
 # If there is a name clash, appends '_copy' to the filename (before the extension)
@@ -106,7 +109,7 @@ def handle_prompt_answer(answer, dirs, media_types):
 
   if answer.lower() in ["yes"]:
     for dir in dirs:
-      if os.path.isdir(dir):
+      if os.path.isdir(dir): #TODO: Remove this if after creating functional tests
         try:
           organise_media(dir, media_types)
         except Exception as e:
