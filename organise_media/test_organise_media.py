@@ -1,16 +1,8 @@
+import datetime
 import os
-import pytest
-import shutil
 import yaml
 from organise_media import is_valid_config, read_config_file, get_media_files, safe_move
-
-@pytest.fixture
-def setup_test_environment():
-    # Create a temporary test directory structure for testing
-    test_dir = "test_dir"
-    os.mkdir(test_dir)
-    yield test_dir
-    shutil.rmtree(test_dir)
+from freezegun import freeze_time
 
 def test_is_valid_config_returns_false_for_wrong_input_type():
     config = ["folders_to_organise", "media_extensions"]
@@ -60,29 +52,30 @@ def test_is_valid_config_returns_true_when_config_is_complete_with_correct_types
 
     assert valid
 
-def test_read_config_file_returns_false_for_non_existant_config_file(setup_test_environment):
+def test_read_config_file_returns_false_for_non_existant_config_file():
     config_file_path = "./test_dir/config.yaml"
     config, valid, error_msg = read_config_file(config_file_path)
 
     assert not valid
     assert error_msg == 'Missing configuration file "config.yaml" in the same directory as "organise_media.py". Script aborted.'
 
-def test_read_config_file_returns_false_for_empty_yaml_file(setup_test_environment):
+def test_read_config_file_returns_false_for_empty_yaml_file(fs):
     config_file_path = "./test_dir/config.yaml"
-    create_test_folders_and_file_from_path(config_file_path, [])
+    create_test_folders_and_file_from_path(fs, config_file_path, "".join([]))
 
     config, valid, error_msg = read_config_file(config_file_path)
 
     assert not valid
     assert error_msg == 'The file "config.yaml" must have configuration variables defined. Script aborted.'
 
-def test_read_config_file_returns_false_for_invalid_yaml_file(setup_test_environment):
+def test_read_config_file_returns_false_for_invalid_yaml_file(fs):
     config_file_path = "./test_dir/config.yaml"
     create_test_folders_and_file_from_path(
+        fs,
         config_file_path,
-        [
+        "".join([
             "media_extensions:  - .jpg  - .png"
-        ]
+        ])
     )
 
     config, valid, error_msg = read_config_file(config_file_path)
@@ -90,15 +83,16 @@ def test_read_config_file_returns_false_for_invalid_yaml_file(setup_test_environ
     assert not valid
     assert isinstance(error_msg, yaml.YAMLError)
 
-def test_read_config_file_returns_false_for_yaml_file_misisng_folders_to_organise(setup_test_environment):
+def test_read_config_file_returns_false_for_yaml_file_misisng_folders_to_organise(fs):
     config_file_path = "./test_dir/config.yaml"
     create_test_folders_and_file_from_path(
+        fs,
         config_file_path,
-        [
+        "".join([
             "media_extensions:\n",
             "    - .jpg\n",
             "    - .png\n"
-        ]
+        ])
     )
 
     config, valid, error_msg = read_config_file(config_file_path)
@@ -106,15 +100,16 @@ def test_read_config_file_returns_false_for_yaml_file_misisng_folders_to_organis
     assert not valid
     assert error_msg == 'The configuration file "config.yaml" must have a variable folders_to_organise of type list. Script aborted.'
 
-def test_read_config_file_returns_false_for_yaml_file_misisng_media_extensions(setup_test_environment):
+def test_read_config_file_returns_false_for_yaml_file_misisng_media_extensions(fs):
     config_file_path = "./test_dir/config.yaml"
     create_test_folders_and_file_from_path(
+        fs,
         config_file_path,
-        [
+        "".join([
             "folders_to_organise:\n",
             "    - D:\\test\\data\n",
             "    - E:\\some\\folder\n"
-        ]
+        ])
     )
 
     config, valid, error_msg = read_config_file(config_file_path)
@@ -122,11 +117,12 @@ def test_read_config_file_returns_false_for_yaml_file_misisng_media_extensions(s
     assert not valid
     assert error_msg == 'The configuration file "config.yaml" must have a variable media_extensions of type list. Script aborted.'
 
-def test_read_config_file_returns_true_and_config_matching_yaml_attributes(setup_test_environment):
+def test_read_config_file_returns_true_and_config_matching_yaml_attributes(fs):
     config_file_path = "./test_dir/config.yaml"
     create_test_folders_and_file_from_path(
+        fs,
         config_file_path,
-        [
+        "".join([
             "folders_to_organise:\n",
             "    - D:\\test\\data\n",
             "    - E:\\some\\folder\n",
@@ -134,7 +130,7 @@ def test_read_config_file_returns_true_and_config_matching_yaml_attributes(setup
             "media_extensions:\n",
             "    - .jpg\n",
             "    - .png\n"
-        ]
+        ])
     )
 
     config, valid, error_msg = read_config_file(config_file_path)
@@ -145,27 +141,29 @@ def test_read_config_file_returns_true_and_config_matching_yaml_attributes(setup
     assert config["media_extensions"][0] == ".jpg"
     assert config["media_extensions"][1] == ".png"
 
-def test_get_media_files_returns_zero_files_for_invalid_path(setup_test_environment):
+def test_get_media_files_returns_zero_files_for_invalid_path():
     test_path = "./non_existant_dir/"
     result = list(get_media_files(test_path, []))
 
     assert len(result) == 0
 
-def test_get_media_files_returns_zero_files_for_empty_media_types_array(setup_test_environment):
+def test_get_media_files_returns_zero_files_for_empty_media_types_array(fs):
     test_path = "./test_dir/"
+    create_test_folders_and_file_from_path(fs, test_path)
+
     result = list(get_media_files(test_path, []))
 
     assert len(result) == 0
 
-def test_get_media_files_ignores_directories(setup_test_environment):
+def test_get_media_files_ignores_directories(fs):
     test_path = "./test_dir/"
     subdir_path = "./test_dir/subdir/"
 
     media_types = [".jpg"]
     jpg_file = "./test_dir/file.jpg"
 
-    create_test_folders_and_file_from_path(jpg_file)
-    create_test_folders_and_file_from_path(subdir_path)
+    create_test_folders_and_file_from_path(fs, jpg_file)
+    create_test_folders_and_file_from_path(fs, subdir_path)
 
     assert os.path.exists(jpg_file)
     assert os.path.exists(subdir_path)
@@ -175,7 +173,7 @@ def test_get_media_files_ignores_directories(setup_test_environment):
     assert len(result) == 1
     assert result[0] == "file.jpg"
 
-def test_get_media_files_returns_files_matching_media_types_array(setup_test_environment):
+def test_get_media_files_returns_files_matching_media_types_array(fs):
     test_path = "./test_dir/"
     media_types = [".jpg", ".png"]
 
@@ -186,12 +184,12 @@ def test_get_media_files_returns_files_matching_media_types_array(setup_test_env
     mp4_file1 = "./test_dir/file1.mp4"
     mp4_file2 = "./test_dir/file2.mp4"
 
-    create_test_folders_and_file_from_path(jpg_file1)
-    create_test_folders_and_file_from_path(jpg_file2)
-    create_test_folders_and_file_from_path(png_file1)
-    create_test_folders_and_file_from_path(png_file2)
-    create_test_folders_and_file_from_path(mp4_file1)
-    create_test_folders_and_file_from_path(mp4_file2)
+    create_test_folders_and_file_from_path(fs, jpg_file1)
+    create_test_folders_and_file_from_path(fs, jpg_file2)
+    create_test_folders_and_file_from_path(fs, png_file1)
+    create_test_folders_and_file_from_path(fs, png_file2)
+    create_test_folders_and_file_from_path(fs, mp4_file1)
+    create_test_folders_and_file_from_path(fs, mp4_file2)
 
     assert os.path.exists(jpg_file1)
     assert os.path.exists(jpg_file2)
@@ -204,17 +202,17 @@ def test_get_media_files_returns_files_matching_media_types_array(setup_test_env
 
     assert len(result) == 4
     assert result[0] == "file1.jpg"
-    assert result[1] == "file1.png"
-    assert result[2] == "file2.jpg"
+    assert result[1] == "file2.jpg"
+    assert result[2] == "file1.png"
     assert result[3] == "file2.png"
 
-def test_safe_move_to_existing_dir(setup_test_environment):
+def test_safe_move_to_existing_dir(fs):
     src_file_path = "./test_dir/source/file.jpg"
     dest_dir_path = "./test_dir/destination/"
     expected_file_path = "./test_dir/destination/file.jpg"
 
-    create_test_folders_and_file_from_path(src_file_path)
-    create_test_folders_and_file_from_path(dest_dir_path)
+    create_test_folders_and_file_from_path(fs, src_file_path)
+    create_test_folders_and_file_from_path(fs, dest_dir_path)
 
     assert os.path.exists(src_file_path)
     assert os.path.exists(dest_dir_path)
@@ -223,16 +221,16 @@ def test_safe_move_to_existing_dir(setup_test_environment):
     assert not os.path.exists(src_file_path)
     assert os.path.exists(expected_file_path)
 
-def test_safe_move_doesnt_overwrite_existing_files(setup_test_environment):
+def test_safe_move_doesnt_overwrite_existing_files(fs):
     src_file_path = "./test_dir/source/file.jpg"
     dest_dir_path = "./test_dir/destination/"
     existing_file_path = "./test_dir/destination/file.jpg"
     existing_copy_file_path = "./test_dir/destination/file_copy.jpg"
     expected_file_path = "./test_dir/destination/file_copy_copy.jpg"
 
-    create_test_folders_and_file_from_path(src_file_path)
-    create_test_folders_and_file_from_path(existing_file_path)
-    create_test_folders_and_file_from_path(existing_copy_file_path)
+    create_test_folders_and_file_from_path(fs, src_file_path)
+    create_test_folders_and_file_from_path(fs, existing_file_path)
+    create_test_folders_and_file_from_path(fs, existing_copy_file_path)
 
     assert os.path.exists(src_file_path)
     assert os.path.exists(existing_file_path)
@@ -245,13 +243,23 @@ def test_safe_move_doesnt_overwrite_existing_files(setup_test_environment):
     assert os.path.exists(expected_file_path)
 
 # Helper functions
-def create_test_folders_and_file_from_path(path, content = None):
+def create_test_folders_and_file_from_path(fs, path, content = None, creation_date = datetime.datetime.now()):
     path_dirs, file_name = os.path.split(path)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if not fs.exists(os.path.dirname(path)):
+        fs.create_dir(os.path.dirname(path))
 
     if file_name != '':
-        if content is None:
-            open(path, "x")
+        with freeze_time(creation_date):
+            if content is None:
+                fs.create_file(path)
+            else:
+                fs.create_file(path, contents = content)
+
+def create_files_for_organise_media_tests(fs, files):
+    for file in files:
+        if 'creation_date' in file:
+            create_test_folders_and_file_from_path(fs, file['path'], creation_date = file['creation_date'])
         else:
-            with open(path, "w") as fp:
-                fp.writelines(content)
+            create_test_folders_and_file_from_path(fs, file['path'])
+
+        assert os.path.exists(file['path'])
