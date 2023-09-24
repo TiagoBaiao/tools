@@ -1,8 +1,8 @@
 import datetime
 import os
 import yaml
-from organise_media import is_valid_config, read_config_file, get_media_files, safe_move
 from freezegun import freeze_time
+from organise_media import is_valid_config, read_config_file, get_media_files, safe_move, organise_media
 
 def test_is_valid_config_returns_false_for_wrong_input_type():
     config = ["folders_to_organise", "media_extensions"]
@@ -241,6 +241,151 @@ def test_safe_move_doesnt_overwrite_existing_files(fs):
     assert os.path.exists(existing_file_path)
     assert os.path.exists(existing_copy_file_path)
     assert os.path.exists(expected_file_path)
+
+def test_organise_media_moves_zero_files_for_non_existant_directory(fs):
+    dir_to_organise = "./non_existant_dir/"
+    media_types = [".jpg", ".png"]
+
+    test_files = [
+        { 'path': "./test_dir/dir_to_organise/file1.jpg" },
+        { 'path': "./test_dir/dir_to_organise/file2.jpg" },
+        { 'path': "./test_dir/dir_to_organise/file1.png" },
+        { 'path': "./test_dir/dir_to_organise/file2.png" },
+        { 'path': "./test_dir/dir_to_organise/file1.mp4" },
+        { 'path': "./test_dir/dir_to_organise/file2.mp4" }
+    ]
+
+    create_files_for_organise_media_tests(fs, test_files)
+
+    organise_media(dir_to_organise, media_types)
+
+    for test_file in test_files:
+        assert os.path.exists(test_file['path'])
+
+def test_organise_media_moves_zero_files_for_empty_media_types(fs):
+    dir_to_organise = "./test_dir/dir_to_organise/"
+    media_types = []
+
+    test_files = [
+        { 'path': "./test_dir/dir_to_organise/file1.jpg" },
+        { 'path': "./test_dir/dir_to_organise/file2.jpg" },
+        { 'path': "./test_dir/dir_to_organise/file1.png" },
+        { 'path': "./test_dir/dir_to_organise/file2.png" },
+        { 'path': "./test_dir/dir_to_organise/file1.mp4" },
+        { 'path': "./test_dir/dir_to_organise/file2.mp4" }
+    ]
+
+    create_files_for_organise_media_tests(fs, test_files)
+
+    organise_media(dir_to_organise, media_types)
+
+    for test_file in test_files:
+        assert os.path.exists(test_file['path'])
+
+def test_organise_media_moves_zero_files_when_no_files_with_input_media_types(fs):
+    dir_to_organise = "./test_dir/dir_to_organise/"
+    media_types = [".raw"]
+
+    test_files = [
+        { 'path': "./test_dir/dir_to_organise/file1.jpg" },
+        { 'path': "./test_dir/dir_to_organise/file2.jpg" },
+        { 'path': "./test_dir/dir_to_organise/file1.png" },
+        { 'path': "./test_dir/dir_to_organise/file2.png" },
+        { 'path': "./test_dir/dir_to_organise/file1.mp4" },
+        { 'path': "./test_dir/dir_to_organise/file2.mp4" }
+    ]
+
+    create_files_for_organise_media_tests(fs, test_files)
+
+    organise_media(dir_to_organise, media_types)
+
+    for test_file in test_files:
+        assert os.path.exists(test_file['path'])
+
+def test_organise_media_moves_files_with_input_media_types(fs):
+    dir_to_organise = "./test_dir/dir_to_organise/"
+    media_types = [".jpg", ".png"]
+
+    test_files = [
+        { 'path': "./test_dir/dir_to_organise/file1.jpg", 'creation_date': datetime.datetime(2009, 10, 5) },
+        { 'path': "./test_dir/dir_to_organise/file2.jpg", 'creation_date': datetime.datetime(2013, 7, 10) },
+        { 'path': "./test_dir/dir_to_organise/file1.png", 'creation_date': datetime.datetime(2009, 10, 5) },
+        { 'path': "./test_dir/dir_to_organise/file2.png", 'creation_date': datetime.datetime(2013, 10, 5) },
+        { 'path': "./test_dir/dir_to_organise/file1.mp4", 'creation_date': datetime.datetime(2009, 10, 5) },
+        { 'path': "./test_dir/dir_to_organise/file2.mp4", 'creation_date': datetime.datetime(2013, 10, 5) }
+    ]
+
+    create_files_for_organise_media_tests(fs, test_files)
+
+    organise_media(dir_to_organise, media_types)
+
+    for test_file in test_files:
+        filename, file_extension = os.path.splitext(test_file['path'])
+        if file_extension in media_types:
+            assert not os.path.exists(test_file['path'])
+        else:
+            assert os.path.exists(test_file['path'])
+
+    assert os.path.exists("./test_dir/dir_to_organise/2009/10_October/file1.jpg")
+    assert os.path.exists("./test_dir/dir_to_organise/2013/07_July/file2.jpg")
+    assert os.path.exists("./test_dir/dir_to_organise/2009/10_October/file1.png")
+    assert os.path.exists("./test_dir/dir_to_organise/2013/10_October/file2.png")
+
+def test_organise_media_moves_zero_files_in_other_directories(fs):
+    dir_to_organise = "./test_dir/dir_to_organise/"
+    media_types = [".jpg", ".png"]
+
+    other_dir = "./test_dir/other_dir/"
+    other_subdir = "./test_dir/dir_to_organise/other_subdir/"
+
+    test_file_paths = [
+        { 'path': "./test_dir/dir_to_organise/file1.jpg" },
+        { 'path': "./test_dir/dir_to_organise/file2.jpg" },
+        { 'path': "./test_dir/dir_to_organise/file1.png" },
+        { 'path': "./test_dir/dir_to_organise/file2.png" },
+        { 'path': "./test_dir/dir_to_organise/file1.mp4" },
+        { 'path': "./test_dir/dir_to_organise/file2.mp4" },
+        { 'path': "./test_dir/other_dir/file3.jpg" },
+        { 'path': "./test_dir/other_dir/file3.png" },
+        { 'path': "./test_dir/dir_to_organise/other_subdir/file4.jpg" },
+        { 'path': "./test_dir/dir_to_organise/other_subdir/file4.png" }
+    ]
+
+    create_files_for_organise_media_tests(fs, test_file_paths)
+
+    assert len(os.listdir(other_dir)) == 2
+    assert len(os.listdir(other_subdir)) == 2
+
+    organise_media(dir_to_organise, media_types)
+
+    assert len(os.listdir(other_dir)) == 2
+    assert len(os.listdir(other_subdir)) == 2
+
+def test_organise_media_moves_files_without_overwriting_existing_ones(fs):
+    dir_to_organise = "./test_dir/dir_to_organise/"
+    media_types = [".jpg", ".png"]
+
+    test_files = [
+        { 'path': "./test_dir/dir_to_organise/file1.jpg", 'creation_date': datetime.datetime(2009, 10, 5) },
+        { 'path': "./test_dir/dir_to_organise/2009/10_October/file2.jpg", 'creation_date': datetime.datetime(2009, 10, 5) },
+        { 'path': "./test_dir/dir_to_organise/file3.jpg", 'creation_date': datetime.datetime(2010, 7, 5) },
+        { 'path': "./test_dir/dir_to_organise/2010/07_July/file3.jpg", 'creation_date': datetime.datetime(2010, 7, 5) },
+        { 'path': "./test_dir/dir_to_organise/file4.png", 'creation_date': datetime.datetime(2011, 5, 5) },
+        { 'path': "./test_dir/dir_to_organise/2011/05_May/file4.png", 'creation_date': datetime.datetime(2011, 5, 5) },
+        { 'path': "./test_dir/dir_to_organise/2011/05_May/file4_copy.png", 'creation_date': datetime.datetime(2011, 5, 5) }
+    ]
+
+    create_files_for_organise_media_tests(fs, test_files)
+
+    organise_media(dir_to_organise, media_types)
+
+    assert os.path.exists("./test_dir/dir_to_organise/2009/10_October/file1.jpg")
+    assert os.path.exists("./test_dir/dir_to_organise/2009/10_October/file2.jpg")
+    assert os.path.exists("./test_dir/dir_to_organise/2010/07_July/file3.jpg")
+    assert os.path.exists("./test_dir/dir_to_organise/2010/07_July/file3_copy.jpg")
+    assert os.path.exists("./test_dir/dir_to_organise/2011/05_May/file4.png")
+    assert os.path.exists("./test_dir/dir_to_organise/2011/05_May/file4_copy.png")
+    assert os.path.exists("./test_dir/dir_to_organise/2011/05_May/file4_copy_copy.png")
 
 # Helper functions
 def create_test_folders_and_file_from_path(fs, path, content = None, creation_date = datetime.datetime.now()):
