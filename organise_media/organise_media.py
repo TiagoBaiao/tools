@@ -103,7 +103,7 @@ def organise_media(dir, media_types):
     safe_move(file_path, destination_path)
     file_count += 1
 
-  logging.info('Finished moving ' + str(file_count) + ' files!')
+    logging.info('Finished moving ' + str(file_count) + ' files!')
 
 # Handles confirmation prompt answer by the user by either organising the media files in the input directories in different folders, or aborting the script
 def handle_prompt_answer(answer, dirs, media_types):

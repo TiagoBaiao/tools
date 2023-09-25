@@ -537,6 +537,29 @@ def test_script_only_moves_files_matching_media_types(fs):
     assert os.path.exists("./test_dir/second_dir_to_organise/2010/03_March/file2.jpg")
     assert os.path.exists("./test_dir/second_dir_to_organise/2012/08_August/file2.png")
 
+def test_script_moves_files_for_existing_dirs_and_ignores_non_existant_dirs(fs):
+    prompt_answer = "yes"
+    dirs_to_organise = [
+        "./non_existant_dir/",
+        "./test_dir/first_dir_to_organise/"
+    ]
+    media_types = [".jpg", ".png"]
+
+    test_files = [
+        { 'path': "./test_dir/first_dir_to_organise/file1.jpg", 'creation_date': datetime.datetime(2009, 9, 5) },
+        { 'path': "./test_dir/first_dir_to_organise/file1.png", 'creation_date': datetime.datetime(2011, 6, 5) }
+    ]
+
+    create_files_for_organise_media_tests(fs, test_files)
+
+    handle_prompt_answer(prompt_answer, dirs_to_organise, media_types)
+
+    for test_file in test_files:
+        assert not os.path.exists(test_file['path'])
+
+    assert os.path.exists("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg")
+    assert os.path.exists("./test_dir/first_dir_to_organise/2011/06_June/file1.png")
+
 def test_script_does_not_move_files_in_other_dirs(fs):
     prompt_answer = "yes"
     dirs_to_organise = [
