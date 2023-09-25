@@ -111,13 +111,10 @@ def handle_prompt_answer(answer, dirs, media_types):
 
   if answer.lower() in ["yes"]:
     for dir in dirs:
-      if os.path.isdir(dir): #TODO: Remove this 'if' after creating functional tests
-        try:
-          organise_media(dir, media_types)
-        except Exception as e:
-          logging.error(e, exc_info=True)
-      else:
-        logging.warning('Failed to organise directory: ' + dir + '. It does not exist.')
+      try:
+        organise_media(dir, media_types)
+      except Exception as e:
+        logging.error(e, exc_info=True)
 
       print('')
 
