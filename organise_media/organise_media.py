@@ -7,7 +7,6 @@ import yaml
 
 # TODOS
 # - Organise project folders according to typical python standards
-# - Add tests
 
 CONFIG_PATH = r'.\config.yaml'
 CONFIG_TYPES = { 'folders_to_organise': list, 'media_extensions': list }
