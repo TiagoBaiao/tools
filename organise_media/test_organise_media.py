@@ -193,7 +193,7 @@ def test_get_media_files_returns_files_matching_media_types_array(fs):
     assert result[3] == "file2.png"
 
 def test_safe_move_to_existing_dir(fs):
-    src_file = FakeFile("./test_dir/source/file.jpg")
+    src_file = FakeFile("./test_dir/source/file.jpg", "JPG File")
 
     dest_dir_path = "./test_dir/destination/"
     expected_file_path = "./test_dir/destination/file.jpg"
@@ -204,12 +204,12 @@ def test_safe_move_to_existing_dir(fs):
     safe_move(src_file.path, dest_dir_path)
 
     assert not os.path.exists(src_file.path)
-    assert os.path.exists(expected_file_path)
+    assert_file_exists_with_content(expected_file_path, "JPG File")
 
 def test_safe_move_doesnt_overwrite_existing_files(fs):
-    src_file = FakeFile("./test_dir/source/file.jpg")
-    existing_file = FakeFile("./test_dir/destination/file.jpg")
-    existing_copy_file = FakeFile("./test_dir/destination/file_copy.jpg")
+    src_file = FakeFile("./test_dir/source/file.jpg", "JPG File")
+    existing_file = FakeFile("./test_dir/destination/file.jpg", "Existing JPG File")
+    existing_copy_file = FakeFile("./test_dir/destination/file_copy.jpg", "Existing JPG File Copy")
 
     dest_dir_path = "./test_dir/destination/"
     expected_file_path = "./test_dir/destination/file_copy_copy.jpg"
@@ -221,9 +221,9 @@ def test_safe_move_doesnt_overwrite_existing_files(fs):
     safe_move(src_file.path, dest_dir_path)
 
     assert not os.path.exists(src_file.path)
-    assert os.path.exists(existing_file.path)
-    assert os.path.exists(existing_copy_file.path)
-    assert os.path.exists(expected_file_path)
+    assert_file_exists_with_content(existing_file.path, "Existing JPG File")
+    assert_file_exists_with_content(existing_copy_file.path, "Existing JPG File Copy")
+    assert_file_exists_with_content(expected_file_path, "JPG File")
 
 def test_organise_media_moves_zero_files_for_non_existant_directory(fs):
     dir_to_organise = "./non_existant_dir/"
@@ -287,12 +287,12 @@ def test_organise_media_moves_files_with_input_media_types(fs):
     media_types = [".jpg", ".png"]
 
     test_files = [
-        FakeFile("./test_dir/dir_to_organise/file1.jpg", None, datetime.datetime(2009, 10, 5)),
-        FakeFile("./test_dir/dir_to_organise/file2.jpg", None, datetime.datetime(2013, 7, 10)),
-        FakeFile("./test_dir/dir_to_organise/file1.png", None, datetime.datetime(2009, 10, 5)),
-        FakeFile("./test_dir/dir_to_organise/file2.png", None, datetime.datetime(2013, 10, 5)),
-        FakeFile("./test_dir/dir_to_organise/file1.mp4", None, datetime.datetime(2009, 10, 5)),
-        FakeFile("./test_dir/dir_to_organise/file2.mp4", None, datetime.datetime(2013, 10, 5))
+        FakeFile("./test_dir/dir_to_organise/file1.jpg", "JPG File 1", datetime.datetime(2009, 10, 5)),
+        FakeFile("./test_dir/dir_to_organise/file2.jpg", "JPG File 2", datetime.datetime(2013, 7, 10)),
+        FakeFile("./test_dir/dir_to_organise/file1.png", "PNG File 1", datetime.datetime(2009, 10, 5)),
+        FakeFile("./test_dir/dir_to_organise/file2.png", "PNG File 2", datetime.datetime(2013, 10, 5)),
+        FakeFile("./test_dir/dir_to_organise/file1.mp4", "MP4 File 1", datetime.datetime(2009, 10, 5)),
+        FakeFile("./test_dir/dir_to_organise/file2.mp4", "MP4 File 2", datetime.datetime(2013, 10, 5))
     ]
 
     create_test_files(fs, test_files)
@@ -300,10 +300,10 @@ def test_organise_media_moves_files_with_input_media_types(fs):
 
     assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
-    assert os.path.exists("./test_dir/dir_to_organise/2009/10_October/file1.jpg")
-    assert os.path.exists("./test_dir/dir_to_organise/2013/07_July/file2.jpg")
-    assert os.path.exists("./test_dir/dir_to_organise/2009/10_October/file1.png")
-    assert os.path.exists("./test_dir/dir_to_organise/2013/10_October/file2.png")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2009/10_October/file1.jpg", "JPG File 1")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2013/07_July/file2.jpg", "JPG File 2")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2009/10_October/file1.png", "PNG File 1")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2013/10_October/file2.png", "PNG File 2")
 
 def test_organise_media_moves_zero_files_in_other_directories(fs):
     dir_to_organise = "./test_dir/dir_to_organise/"
@@ -313,62 +313,62 @@ def test_organise_media_moves_zero_files_in_other_directories(fs):
     other_subdir = "./test_dir/dir_to_organise/other_subdir/"
 
     test_file_paths = [
-        FakeFile("./test_dir/dir_to_organise/file1.jpg"),
-        FakeFile("./test_dir/dir_to_organise/file2.jpg"),
-        FakeFile("./test_dir/dir_to_organise/file1.png"),
-        FakeFile("./test_dir/dir_to_organise/file2.png"),
-        FakeFile("./test_dir/dir_to_organise/file1.mp4"),
-        FakeFile("./test_dir/dir_to_organise/file2.mp4"),
-        FakeFile("./test_dir/other_dir/file3.jpg"),
-        FakeFile("./test_dir/other_dir/file3.png"),
-        FakeFile("./test_dir/dir_to_organise/other_subdir/file4.jpg"),
-        FakeFile("./test_dir/dir_to_organise/other_subdir/file4.png")
+        FakeFile("./test_dir/dir_to_organise/file1.jpg", "JPG File 1"),
+        FakeFile("./test_dir/dir_to_organise/file2.jpg", "JPG File 2"),
+        FakeFile("./test_dir/dir_to_organise/file1.png", "PNG File 1"),
+        FakeFile("./test_dir/dir_to_organise/file2.png", "PNG File 2"),
+        FakeFile("./test_dir/dir_to_organise/file1.mp4", "MP4 File 1"),
+        FakeFile("./test_dir/dir_to_organise/file2.mp4", "MP4 File 2"),
+        FakeFile("./test_dir/other_dir/file3.jpg", "Other JPG File 3"),
+        FakeFile("./test_dir/other_dir/file3.png", "Other PNG File 3"),
+        FakeFile("./test_dir/dir_to_organise/other_subdir/file4.jpg", "Other JPG File 4"),
+        FakeFile("./test_dir/dir_to_organise/other_subdir/file4.png", "Other PNG File 4")
     ]
 
     create_test_files(fs, test_file_paths)
 
     assert len(os.listdir(other_dir)) == 2
-    assert os.path.exists("./test_dir/other_dir/file3.jpg")
-    assert os.path.exists("./test_dir/other_dir/file3.png")
+    assert_file_exists_with_content("./test_dir/other_dir/file3.jpg", "Other JPG File 3")
+    assert_file_exists_with_content("./test_dir/other_dir/file3.png", "Other PNG File 3")
 
     assert len(os.listdir(other_subdir)) == 2
-    assert os.path.exists("./test_dir/dir_to_organise/other_subdir/file4.jpg")
-    assert os.path.exists("./test_dir/dir_to_organise/other_subdir/file4.png")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/other_subdir/file4.jpg", "Other JPG File 4")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/other_subdir/file4.png", "Other PNG File 4")
 
     organise_media(dir_to_organise, media_types)
 
     assert len(os.listdir(other_dir)) == 2
-    assert os.path.exists("./test_dir/other_dir/file3.jpg")
-    assert os.path.exists("./test_dir/other_dir/file3.png")
+    assert_file_exists_with_content("./test_dir/other_dir/file3.jpg", "Other JPG File 3")
+    assert_file_exists_with_content("./test_dir/other_dir/file3.png", "Other PNG File 3")
 
     assert len(os.listdir(other_subdir)) == 2
-    assert os.path.exists("./test_dir/dir_to_organise/other_subdir/file4.jpg")
-    assert os.path.exists("./test_dir/dir_to_organise/other_subdir/file4.png")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/other_subdir/file4.jpg", "Other JPG File 4")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/other_subdir/file4.png", "Other PNG File 4")
 
 def test_organise_media_moves_files_without_overwriting_existing_ones(fs):
     dir_to_organise = "./test_dir/dir_to_organise/"
     media_types = [".jpg", ".png"]
 
     test_files = [
-        FakeFile("./test_dir/dir_to_organise/file1.jpg", None, datetime.datetime(2009, 10, 5)),
-        FakeFile("./test_dir/dir_to_organise/2009/10_October/file2.jpg", None, datetime.datetime(2009, 10, 5)),
-        FakeFile("./test_dir/dir_to_organise/file3.jpg", None, datetime.datetime(2010, 7, 5)),
-        FakeFile("./test_dir/dir_to_organise/2010/07_July/file3.jpg", None, datetime.datetime(2010, 7, 5)),
-        FakeFile("./test_dir/dir_to_organise/file4.png", None, datetime.datetime(2011, 5, 5)),
-        FakeFile("./test_dir/dir_to_organise/2011/05_May/file4.png", None, datetime.datetime(2011, 5, 5)),
-        FakeFile("./test_dir/dir_to_organise/2011/05_May/file4_copy.png", None, datetime.datetime(2011, 5, 5))
+        FakeFile("./test_dir/dir_to_organise/file1.jpg", "JPG File 1", datetime.datetime(2009, 10, 5)),
+        FakeFile("./test_dir/dir_to_organise/2009/10_October/file2.jpg", "Existing JPG File 2", datetime.datetime(2009, 10, 5)),
+        FakeFile("./test_dir/dir_to_organise/file3.jpg", "JPG File 3", datetime.datetime(2010, 7, 5)),
+        FakeFile("./test_dir/dir_to_organise/2010/07_July/file3.jpg", "Existing JPG File 3", datetime.datetime(2010, 7, 5)),
+        FakeFile("./test_dir/dir_to_organise/file4.png", "PNG File 4", datetime.datetime(2011, 5, 5)),
+        FakeFile("./test_dir/dir_to_organise/2011/05_May/file4.png", "Existing PNG File 4", datetime.datetime(2011, 5, 5)),
+        FakeFile("./test_dir/dir_to_organise/2011/05_May/file4_copy.png", "Existing PNG File 4 Copy", datetime.datetime(2011, 5, 5))
     ]
 
     create_test_files(fs, test_files)
     organise_media(dir_to_organise, media_types)
 
-    assert os.path.exists("./test_dir/dir_to_organise/2009/10_October/file1.jpg")
-    assert os.path.exists("./test_dir/dir_to_organise/2009/10_October/file2.jpg")
-    assert os.path.exists("./test_dir/dir_to_organise/2010/07_July/file3.jpg")
-    assert os.path.exists("./test_dir/dir_to_organise/2010/07_July/file3_copy.jpg")
-    assert os.path.exists("./test_dir/dir_to_organise/2011/05_May/file4.png")
-    assert os.path.exists("./test_dir/dir_to_organise/2011/05_May/file4_copy.png")
-    assert os.path.exists("./test_dir/dir_to_organise/2011/05_May/file4_copy_copy.png")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2009/10_October/file1.jpg", "JPG File 1")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2009/10_October/file2.jpg", "Existing JPG File 2")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2010/07_July/file3.jpg", "Existing JPG File 3")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2010/07_July/file3_copy.jpg", "JPG File 3")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2011/05_May/file4.png", "Existing PNG File 4")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2011/05_May/file4_copy.png", "Existing PNG File 4 Copy")
+    assert_file_exists_with_content("./test_dir/dir_to_organise/2011/05_May/file4_copy_copy.png", "PNG File 4")
 
 def test_script_moves_zero_files_when_prompt_answer_is_not_yes(fs):
     prompt_answer = "no"
@@ -489,12 +489,12 @@ def test_script_only_moves_files_matching_media_types(fs):
     media_types = [".jpg", ".png"]
 
     test_files = [
-        FakeFile("./test_dir/first_dir_to_organise/file1.jpg", None, datetime.datetime(2009, 9, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/file2.jpg", None, datetime.datetime(2010, 3, 5)),
-        FakeFile("./test_dir/first_dir_to_organise/file1.png", None, datetime.datetime(2011, 6, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/file2.png", None, datetime.datetime(2012, 8, 5)),
-        FakeFile("./test_dir/first_dir_to_organise/file1.mp4", None, datetime.datetime(2013, 1, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/file2.mp4", None, datetime.datetime(2014, 11, 5))
+        FakeFile("./test_dir/first_dir_to_organise/file1.jpg", "JPG File 1", datetime.datetime(2009, 9, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/file2.jpg", "JPG File 2", datetime.datetime(2010, 3, 5)),
+        FakeFile("./test_dir/first_dir_to_organise/file1.png", "PNG File 1", datetime.datetime(2011, 6, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/file2.png", "PNG File 2", datetime.datetime(2012, 8, 5)),
+        FakeFile("./test_dir/first_dir_to_organise/file1.mp4", "MP4 File 1", datetime.datetime(2013, 1, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/file2.mp4", "MP4 File 1", datetime.datetime(2014, 11, 5))
     ]
 
     create_test_files(fs, test_files)
@@ -502,10 +502,10 @@ def test_script_only_moves_files_matching_media_types(fs):
 
     assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
-    assert os.path.exists("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg")
-    assert os.path.exists("./test_dir/first_dir_to_organise/2011/06_June/file1.png")
-    assert os.path.exists("./test_dir/second_dir_to_organise/2010/03_March/file2.jpg")
-    assert os.path.exists("./test_dir/second_dir_to_organise/2012/08_August/file2.png")
+    assert_file_exists_with_content("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg", "JPG File 1")
+    assert_file_exists_with_content("./test_dir/first_dir_to_organise/2011/06_June/file1.png", "PNG File 1")
+    assert_file_exists_with_content("./test_dir/second_dir_to_organise/2010/03_March/file2.jpg", "JPG File 2")
+    assert_file_exists_with_content("./test_dir/second_dir_to_organise/2012/08_August/file2.png", "PNG File 2")
 
 def test_script_moves_files_for_existing_dirs_and_ignores_non_existant_dirs(fs):
     prompt_answer = "yes"
@@ -516,8 +516,8 @@ def test_script_moves_files_for_existing_dirs_and_ignores_non_existant_dirs(fs):
     media_types = [".jpg", ".png"]
 
     test_files = [
-        FakeFile("./test_dir/first_dir_to_organise/file1.jpg", None, datetime.datetime(2009, 9, 5)),
-        FakeFile("./test_dir/first_dir_to_organise/file1.png", None, datetime.datetime(2011, 6, 5))
+        FakeFile("./test_dir/first_dir_to_organise/file1.jpg", "JPG File 1", datetime.datetime(2009, 9, 5)),
+        FakeFile("./test_dir/first_dir_to_organise/file1.png", "PNG File 1", datetime.datetime(2011, 6, 5))
     ]
 
     create_test_files(fs, test_files)
@@ -525,8 +525,8 @@ def test_script_moves_files_for_existing_dirs_and_ignores_non_existant_dirs(fs):
 
     assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
-    assert os.path.exists("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg")
-    assert os.path.exists("./test_dir/first_dir_to_organise/2011/06_June/file1.png")
+    assert_file_exists_with_content("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg", "JPG File 1")
+    assert_file_exists_with_content("./test_dir/first_dir_to_organise/2011/06_June/file1.png", "PNG File 1")
 
 def test_script_does_not_move_files_in_other_dirs(fs):
     prompt_answer = "yes"
@@ -537,13 +537,13 @@ def test_script_does_not_move_files_in_other_dirs(fs):
     media_types = [".jpg", ".png"]
 
     test_files = [
-        FakeFile("./test_dir/first_dir_to_organise/file1.jpg", None, datetime.datetime(2009, 9, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/file2.jpg", None, datetime.datetime(2010, 3, 5)),
-        FakeFile("./test_dir/first_dir_to_organise/file1.png", None, datetime.datetime(2011, 6, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/file2.png", None, datetime.datetime(2012, 8, 5)),
-        FakeFile("./test_dir/other_dir/file3.jpg", None, datetime.datetime(2013, 1, 5)),
-        FakeFile("./test_dir/first_dir_to_organise/other_subdir/file4.jpg", None, datetime.datetime(2014, 11, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/other_subdir/file3.png", None, datetime.datetime(2015, 12, 5))
+        FakeFile("./test_dir/first_dir_to_organise/file1.jpg", "JPG File 1", datetime.datetime(2009, 9, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/file2.jpg", "JPG File 2", datetime.datetime(2010, 3, 5)),
+        FakeFile("./test_dir/first_dir_to_organise/file1.png", "PNG File 1", datetime.datetime(2011, 6, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/file2.png", "PNG File 2", datetime.datetime(2012, 8, 5)),
+        FakeFile("./test_dir/other_dir/file3.jpg", "Other JPG File 3", datetime.datetime(2013, 1, 5)),
+        FakeFile("./test_dir/first_dir_to_organise/other_subdir/file4.jpg", "Other JPG File 4", datetime.datetime(2014, 11, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/other_subdir/file3.png", "Other PNG File 3", datetime.datetime(2015, 12, 5))
     ]
 
     create_test_files(fs, test_files)
@@ -553,9 +553,9 @@ def test_script_does_not_move_files_in_other_dirs(fs):
     assert not os.path.exists("./test_dir/second_dir_to_organise/file2.jpg")
     assert not os.path.exists("./test_dir/first_dir_to_organise/file1.png")
     assert not os.path.exists("./test_dir/second_dir_to_organise/file2.png")
-    assert os.path.exists("./test_dir/other_dir/file3.jpg")
-    assert os.path.exists("./test_dir/first_dir_to_organise/other_subdir/file4.jpg")
-    assert os.path.exists("./test_dir/second_dir_to_organise/other_subdir/file3.png")
+    assert_file_exists_with_content("./test_dir/other_dir/file3.jpg", "Other JPG File 3")
+    assert_file_exists_with_content("./test_dir/first_dir_to_organise/other_subdir/file4.jpg", "Other JPG File 4")
+    assert_file_exists_with_content("./test_dir/second_dir_to_organise/other_subdir/file3.png", "Other PNG File 3")
 
 def test_script_does_not_overwrite_existing_files(fs):
     prompt_answer = "yes"
@@ -566,25 +566,25 @@ def test_script_does_not_overwrite_existing_files(fs):
     media_types = [".jpg", ".png"]
 
     test_files = [
-        FakeFile("./test_dir/first_dir_to_organise/file1.jpg", None, datetime.datetime(2009, 9, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/file2.jpg", None, datetime.datetime(2010, 3, 5)),
-        FakeFile("./test_dir/first_dir_to_organise/file1.png", None, datetime.datetime(2009, 9, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/file2.png", None, datetime.datetime(2010, 3, 5)),
-        FakeFile("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg", None, datetime.datetime(2009, 9, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/2010/03_March/file2.png", None, datetime.datetime(2010, 3, 5)),
-        FakeFile("./test_dir/second_dir_to_organise/2010/03_March/file2_copy.png", None, datetime.datetime(2010, 3, 5))
+        FakeFile("./test_dir/first_dir_to_organise/file1.jpg", "JPG File 1", datetime.datetime(2009, 9, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/file2.jpg", "JPG File 2", datetime.datetime(2010, 3, 5)),
+        FakeFile("./test_dir/first_dir_to_organise/file1.png", "PNG File 1", datetime.datetime(2009, 9, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/file2.png", "PNG File 2", datetime.datetime(2010, 3, 5)),
+        FakeFile("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg", "Existing JPG File 1", datetime.datetime(2009, 9, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/2010/03_March/file2.png", "Existing PNG File 2", datetime.datetime(2010, 3, 5)),
+        FakeFile("./test_dir/second_dir_to_organise/2010/03_March/file2_copy.png", "Existing PNG File 2 Copy", datetime.datetime(2010, 3, 5))
     ]
 
     create_test_files(fs, test_files)
     handle_prompt_answer(prompt_answer, dirs_to_organise, media_types)
 
-    assert os.path.exists("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg")
-    assert os.path.exists("./test_dir/first_dir_to_organise/2009/09_September/file1_copy.jpg")
-    assert os.path.exists("./test_dir/first_dir_to_organise/2009/09_September/file1.png")
-    assert os.path.exists("./test_dir/second_dir_to_organise/2010/03_March/file2.jpg")
-    assert os.path.exists("./test_dir/second_dir_to_organise/2010/03_March/file2.png")
-    assert os.path.exists("./test_dir/second_dir_to_organise/2010/03_March/file2_copy.png")
-    assert os.path.exists("./test_dir/second_dir_to_organise/2010/03_March/file2_copy_copy.png")
+    assert_file_exists_with_content("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg", "Existing JPG File 1")
+    assert_file_exists_with_content("./test_dir/first_dir_to_organise/2009/09_September/file1_copy.jpg", "JPG File 1")
+    assert_file_exists_with_content("./test_dir/first_dir_to_organise/2009/09_September/file1.png", "PNG File 1")
+    assert_file_exists_with_content("./test_dir/second_dir_to_organise/2010/03_March/file2.jpg", "JPG File 2")
+    assert_file_exists_with_content("./test_dir/second_dir_to_organise/2010/03_March/file2.png", "Existing PNG File 2")
+    assert_file_exists_with_content("./test_dir/second_dir_to_organise/2010/03_March/file2_copy.png", "Existing PNG File 2 Copy")
+    assert_file_exists_with_content("./test_dir/second_dir_to_organise/2010/03_March/file2_copy_copy.png", "PNG File 2")
 
 # Helper functions
 def create_test_dir(fs, path):
@@ -611,6 +611,12 @@ def assert_only_moved_files_with_extension_in_media_types(test_files, media_type
             assert not os.path.exists(test_file.path)
         else:
             assert os.path.exists(test_file.path)
+
+def assert_file_exists_with_content(file_path, expected_content):
+    assert os.path.exists(file_path)
+
+    with open(file_path, "r") as file:
+        assert file.read() == expected_content
 
 class FakeFile:
     def __init__(self, path = "", content = None, creation_date = datetime.datetime.now()):
