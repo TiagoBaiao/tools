@@ -207,23 +207,22 @@ def test_safe_move_to_existing_dir(fs):
     assert_file_exists_with_content(fs, expected_file_path, "JPG File")
 
 def test_safe_move_doesnt_overwrite_existing_files(fs):
-    src_file = FakeFile("./test_dir/source/file.jpg", "JPG File")
-    existing_file = FakeFile("./test_dir/destination/file.jpg", "Existing JPG File")
-    existing_copy_file = FakeFile("./test_dir/destination/file_copy.jpg", "Existing JPG File Copy")
-
+    file_to_move = FakeFile("./test_dir/source/file.jpg", "JPG File")
     dest_dir_path = "./test_dir/destination/"
-    expected_file_path = "./test_dir/destination/file_copy_copy.jpg"
 
-    create_test_file(fs, src_file)
-    create_test_file(fs, existing_file)
-    create_test_file(fs, existing_copy_file)
+    test_files = [
+        file_to_move,
+        FakeFile("./test_dir/destination/file.jpg", "Existing JPG File"),
+        FakeFile("./test_dir/destination/file_copy.jpg", "Existing JPG File Copy")
+    ]
 
-    safe_move(src_file.path, dest_dir_path)
+    create_test_files(fs, test_files)
+    safe_move(file_to_move.path, dest_dir_path)
 
-    assert not fs.exists(src_file.path)
-    assert_file_exists_with_content(fs, existing_file.path, "Existing JPG File")
-    assert_file_exists_with_content(fs, existing_copy_file.path, "Existing JPG File Copy")
-    assert_file_exists_with_content(fs, expected_file_path, "JPG File")
+    assert not fs.exists(file_to_move.path)
+    assert_file_exists_with_content(fs, "./test_dir/destination/file.jpg", "Existing JPG File")
+    assert_file_exists_with_content(fs, "./test_dir/destination/file_copy.jpg", "Existing JPG File Copy")
+    assert_file_exists_with_content(fs, "./test_dir/destination/file_copy_copy.jpg", "JPG File")
 
 def test_organise_media_moves_zero_files_for_non_existant_directory(fs):
     dir_to_organise = "./non_existant_dir/"
@@ -604,6 +603,12 @@ def create_test_files(fs, files):
     for file in files:
         create_test_file(fs, file)
 
+def assert_file_exists_with_content(fs, file_path, expected_content):
+    assert fs.exists(file_path)
+
+    with open(file_path, "r") as file:
+        assert file.read() == expected_content
+
 def assert_only_moved_files_with_extension_in_media_types(fs, test_files, media_types):
     for test_file in test_files:
         filename, file_extension = os.path.splitext(test_file.path)
@@ -611,12 +616,6 @@ def assert_only_moved_files_with_extension_in_media_types(fs, test_files, media_
             assert not fs.exists(test_file.path)
         else:
             assert fs.exists(test_file.path)
-
-def assert_file_exists_with_content(fs, file_path, expected_content):
-    assert fs.exists(file_path)
-
-    with open(file_path, "r") as file:
-        assert file.read() == expected_content
 
 class FakeFile:
     def __init__(self, path = "", content = None, creation_date = datetime.datetime.now()):
