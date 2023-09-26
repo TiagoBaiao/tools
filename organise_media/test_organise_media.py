@@ -53,10 +53,7 @@ def test_is_valid_config_returns_true_when_config_is_complete_with_correct_types
     assert valid
 
 def test_read_config_file_returns_false_for_non_existant_config_file():
-    config_file = FakeFile(
-        "./test_dir/config.yaml",
-        "".join([])
-    )
+    config_file = FakeFile("./test_dir/config.yaml")
 
     config, valid, error_msg = read_config_file(config_file.path)
 
@@ -64,10 +61,7 @@ def test_read_config_file_returns_false_for_non_existant_config_file():
     assert error_msg == 'Missing configuration file "config.yaml" in the same directory as "organise_media.py". Script aborted.'
 
 def test_read_config_file_returns_false_for_empty_yaml_file(fs):
-    config_file = FakeFile(
-        "./test_dir/config.yaml",
-        "".join([])
-    )
+    config_file = FakeFile("./test_dir/config.yaml")
 
     create_test_file(fs, config_file)
     config, valid, error_msg = read_config_file(config_file.path)
@@ -145,63 +139,52 @@ def test_read_config_file_returns_true_and_config_matching_yaml_attributes(fs):
     assert config["media_extensions"][1] == ".png"
 
 def test_get_media_files_returns_zero_files_for_invalid_path():
-    test_path = "./non_existant_dir/"
-    result = list(get_media_files(test_path, []))
+    test_dir_path = "./non_existant_dir/"
+    media_types = []
+
+    result = list(get_media_files(test_dir_path, media_types))
 
     assert len(result) == 0
 
 def test_get_media_files_returns_zero_files_for_empty_media_types_array(fs):
-    test_path = "./test_dir/"
-    create_test_folder(fs, test_path)
+    test_dir_path = "./test_dir/"
+    media_types = []
 
-    result = list(get_media_files(test_path, []))
+    create_test_dir(fs, test_dir_path)
+    result = list(get_media_files(test_dir_path, media_types))
 
     assert len(result) == 0
 
 def test_get_media_files_ignores_directories(fs):
-    test_path = "./test_dir/"
-    subdir_path = "./test_dir/subdir/"
-
+    test_dir_path = "./test_dir/"
+    test_subdir_path = "./test_dir/subdir/"
     media_types = [".jpg"]
+
     jpg_file = FakeFile("./test_dir/file.jpg")
 
+    create_test_dir(fs, test_subdir_path)
     create_test_file(fs, jpg_file)
-    create_test_folder(fs, subdir_path)
 
-    assert os.path.exists(jpg_file.path)
-    assert os.path.exists(subdir_path)
-
-    result = list(get_media_files(test_path, media_types))
+    result = list(get_media_files(test_dir_path, media_types))
 
     assert len(result) == 1
     assert result[0] == "file.jpg"
 
 def test_get_media_files_returns_files_matching_media_types_array(fs):
-    test_path = "./test_dir/"
+    test_dir_path = "./test_dir/"
     media_types = [".jpg", ".png"]
 
-    jpg_file1 = FakeFile("./test_dir/file1.jpg")
-    jpg_file2 = FakeFile("./test_dir/file2.jpg")
-    png_file1 = FakeFile("./test_dir/file1.png")
-    png_file2 = FakeFile("./test_dir/file2.png")
-    mp4_file1 = FakeFile("./test_dir/file1.mp4")
-    mp4_file2 = FakeFile("./test_dir/file2.mp4")
+    test_files = [
+        FakeFile("./test_dir/file1.jpg"),
+        FakeFile("./test_dir/file2.jpg"),
+        FakeFile("./test_dir/file1.png"),
+        FakeFile("./test_dir/file2.png"),
+        FakeFile("./test_dir/file1.mp4"),
+        FakeFile("./test_dir/file2.mp4")
+    ]
 
-    create_test_file(fs, jpg_file1)
-    create_test_file(fs, jpg_file2)
-    create_test_file(fs, png_file1)
-    create_test_file(fs, png_file2)
-    create_test_file(fs, mp4_file1)
-    create_test_file(fs, mp4_file2)
-
-    assert os.path.exists(jpg_file1.path)
-    assert os.path.exists(jpg_file2.path)
-    assert os.path.exists(png_file1.path)
-    assert os.path.exists(png_file2.path)
-    assert os.path.exists(mp4_file1.path)
-    assert os.path.exists(mp4_file2.path)
-
-    result = list(get_media_files(test_path, media_types))
+    create_test_files(fs, test_files)
+    result = list(get_media_files(test_dir_path, media_types))
 
     assert len(result) == 4
     assert result[0] == "file1.jpg"
@@ -211,35 +194,32 @@ def test_get_media_files_returns_files_matching_media_types_array(fs):
 
 def test_safe_move_to_existing_dir(fs):
     src_file = FakeFile("./test_dir/source/file.jpg")
+
     dest_dir_path = "./test_dir/destination/"
     expected_file_path = "./test_dir/destination/file.jpg"
 
+    create_test_dir(fs, dest_dir_path)
     create_test_file(fs, src_file)
-    create_test_folder(fs, dest_dir_path)
-
-    assert os.path.exists(src_file.path)
-    assert os.path.exists(dest_dir_path)
 
     safe_move(src_file.path, dest_dir_path)
+
     assert not os.path.exists(src_file.path)
     assert os.path.exists(expected_file_path)
 
 def test_safe_move_doesnt_overwrite_existing_files(fs):
     src_file = FakeFile("./test_dir/source/file.jpg")
-    dest_dir_path = "./test_dir/destination/"
     existing_file = FakeFile("./test_dir/destination/file.jpg")
     existing_copy_file = FakeFile("./test_dir/destination/file_copy.jpg")
+
+    dest_dir_path = "./test_dir/destination/"
     expected_file_path = "./test_dir/destination/file_copy_copy.jpg"
 
     create_test_file(fs, src_file)
     create_test_file(fs, existing_file)
     create_test_file(fs, existing_copy_file)
 
-    assert os.path.exists(src_file.path)
-    assert os.path.exists(existing_file.path)
-    assert os.path.exists(existing_copy_file.path)
-
     safe_move(src_file.path, dest_dir_path)
+
     assert not os.path.exists(src_file.path)
     assert os.path.exists(existing_file.path)
     assert os.path.exists(existing_copy_file.path)
@@ -280,8 +260,8 @@ def test_organise_media_moves_zero_files_for_empty_media_types(fs):
     create_test_files(fs, test_files)
     organise_media(dir_to_organise, media_types)
 
-    for test_file in test_files:
-        assert os.path.exists(test_file.path)
+    assert len(os.listdir(dir_to_organise)) == 6
+    assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
 def test_organise_media_moves_zero_files_when_no_files_with_input_media_types(fs):
     dir_to_organise = "./test_dir/dir_to_organise/"
@@ -299,8 +279,8 @@ def test_organise_media_moves_zero_files_when_no_files_with_input_media_types(fs
     create_test_files(fs, test_files)
     organise_media(dir_to_organise, media_types)
 
-    for test_file in test_files:
-        assert os.path.exists(test_file.path)
+    assert len(os.listdir(dir_to_organise)) == 6
+    assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
 def test_organise_media_moves_files_with_input_media_types(fs):
     dir_to_organise = "./test_dir/dir_to_organise/"
@@ -318,12 +298,7 @@ def test_organise_media_moves_files_with_input_media_types(fs):
     create_test_files(fs, test_files)
     organise_media(dir_to_organise, media_types)
 
-    for test_file in test_files:
-        filename, file_extension = os.path.splitext(test_file.path)
-        if file_extension in media_types:
-            assert not os.path.exists(test_file.path)
-        else:
-            assert os.path.exists(test_file.path)
+    assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
     assert os.path.exists("./test_dir/dir_to_organise/2009/10_October/file1.jpg")
     assert os.path.exists("./test_dir/dir_to_organise/2013/07_July/file2.jpg")
@@ -353,12 +328,22 @@ def test_organise_media_moves_zero_files_in_other_directories(fs):
     create_test_files(fs, test_file_paths)
 
     assert len(os.listdir(other_dir)) == 2
+    assert os.path.exists("./test_dir/other_dir/file3.jpg")
+    assert os.path.exists("./test_dir/other_dir/file3.png")
+
     assert len(os.listdir(other_subdir)) == 2
+    assert os.path.exists("./test_dir/dir_to_organise/other_subdir/file4.jpg")
+    assert os.path.exists("./test_dir/dir_to_organise/other_subdir/file4.png")
 
     organise_media(dir_to_organise, media_types)
 
     assert len(os.listdir(other_dir)) == 2
+    assert os.path.exists("./test_dir/other_dir/file3.jpg")
+    assert os.path.exists("./test_dir/other_dir/file3.png")
+
     assert len(os.listdir(other_subdir)) == 2
+    assert os.path.exists("./test_dir/dir_to_organise/other_subdir/file4.jpg")
+    assert os.path.exists("./test_dir/dir_to_organise/other_subdir/file4.png")
 
 def test_organise_media_moves_files_without_overwriting_existing_ones(fs):
     dir_to_organise = "./test_dir/dir_to_organise/"
@@ -471,8 +456,7 @@ def test_script_moves_zero_files_when_no_media_types_supplied(fs):
     create_test_files(fs, test_files)
     handle_prompt_answer(prompt_answer, dirs_to_organise, media_types)
 
-    for test_file in test_files:
-        assert os.path.exists(test_file.path)
+    assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
 def test_script_moves_zero_files_when_supplied_dirs_do_not_have_files_matching_media_types(fs):
     prompt_answer = "yes"
@@ -494,8 +478,7 @@ def test_script_moves_zero_files_when_supplied_dirs_do_not_have_files_matching_m
     create_test_files(fs, test_files)
     handle_prompt_answer(prompt_answer, dirs_to_organise, media_types)
 
-    for test_file in test_files:
-        assert os.path.exists(test_file.path)
+    assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
 def test_script_only_moves_files_matching_media_types(fs):
     prompt_answer = "yes"
@@ -517,12 +500,7 @@ def test_script_only_moves_files_matching_media_types(fs):
     create_test_files(fs, test_files)
     handle_prompt_answer(prompt_answer, dirs_to_organise, media_types)
 
-    for test_file in test_files:
-        filename, file_extension = os.path.splitext(test_file.path)
-        if file_extension in media_types:
-            assert not os.path.exists(test_file.path)
-        else:
-            assert os.path.exists(test_file.path)
+    assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
     assert os.path.exists("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg")
     assert os.path.exists("./test_dir/first_dir_to_organise/2011/06_June/file1.png")
@@ -545,8 +523,7 @@ def test_script_moves_files_for_existing_dirs_and_ignores_non_existant_dirs(fs):
     create_test_files(fs, test_files)
     handle_prompt_answer(prompt_answer, dirs_to_organise, media_types)
 
-    for test_file in test_files:
-        assert not os.path.exists(test_file.path)
+    assert_only_moved_files_with_extension_in_media_types(test_files, media_types)
 
     assert os.path.exists("./test_dir/first_dir_to_organise/2009/09_September/file1.jpg")
     assert os.path.exists("./test_dir/first_dir_to_organise/2011/06_June/file1.png")
@@ -610,21 +587,30 @@ def test_script_does_not_overwrite_existing_files(fs):
     assert os.path.exists("./test_dir/second_dir_to_organise/2010/03_March/file2_copy_copy.png")
 
 # Helper functions
-def create_test_folder(fs, path):
+def create_test_dir(fs, path):
     if not fs.exists(os.path.dirname(path)):
         fs.create_dir(os.path.dirname(path))
 
-def create_test_file(fs, fake_file):
-    create_test_folder(fs, fake_file.path)
+    assert fs.exists(os.path.dirname(path))
 
-    with freeze_time(fake_file.creation_date):
-        fs.create_file(fake_file.path, contents = fake_file.content)
+def create_test_file(fs, file):
+    create_test_dir(fs, file.path)
+
+    with freeze_time(file.creation_date):
+        fs.create_file(file.path, contents = file.content)
+        assert fs.exists(file.path)
 
 def create_test_files(fs, files):
     for file in files:
         create_test_file(fs, file)
 
-    assert os.path.exists(file.path)
+def assert_only_moved_files_with_extension_in_media_types(test_files, media_types):
+    for test_file in test_files:
+        filename, file_extension = os.path.splitext(test_file.path)
+        if file_extension in media_types:
+            assert not os.path.exists(test_file.path)
+        else:
+            assert os.path.exists(test_file.path)
 
 class FakeFile:
     def __init__(self, path = "", content = None, creation_date = datetime.datetime.now()):
