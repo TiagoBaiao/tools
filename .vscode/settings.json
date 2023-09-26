@@ -1,0 +1,7 @@
+{
+  "python.testing.pytestArgs": [
+    "organise_media"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
+}

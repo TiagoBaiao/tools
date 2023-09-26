@@ -7,7 +7,6 @@ import yaml
 
 # TODOS
 # - Organise project folders according to typical python standards
-# - Add tests
 
 CONFIG_PATH = r'.\config.yaml'
 CONFIG_TYPES = { 'folders_to_organise': list, 'media_extensions': list }
@@ -32,37 +31,42 @@ def terminate_with_error(error_str):
   sys.exit()
 
 # Validate the configuration structure
-def validate_config(config):
+def is_valid_config(config):
   if not isinstance(config, dict):
-    terminate_with_error('The file "config.yaml" must have configuration variables defined. Script aborted.')
+    return bool(False), str('The file "config.yaml" must have configuration variables defined. Script aborted.')
 
   for key in CONFIG_TYPES:
     if not key in config or not isinstance(config[key], CONFIG_TYPES[key]):
-      terminate_with_error('The configuration file "config.yaml" must have a variable ' + key + ' of type ' + CONFIG_TYPES[key].__name__ + '. Script aborted.')
+      return bool(False), str('The configuration file "config.yaml" must have a variable ' + key + ' of type ' + CONFIG_TYPES[key].__name__ + '. Script aborted.')
+
+  return bool(True), str()
 
 # Read the configuration file
 def read_config_file(path):
+  config = { 'folders_to_organise': list(), 'media_extensions': list() }
+
   if not os.path.exists(path):
-    terminate_with_error('Missing configuration file "config.yaml" in the same directory as "organise_media.py". Script aborted.')
+    return config, bool(False), str('Missing configuration file "config.yaml" in the same directory as "organise_media.py". Script aborted.')
 
   with open(path) as config_file:
     try:
       config = yaml.safe_load(config_file)
     except yaml.YAMLError as exception:
-      terminate_with_error(exception)
+      return config, bool(False), exception
 
-  validate_config(config)
-
-  return config
+  return config, *is_valid_config(config)
 
 # Get the list of media files from the input directory path, based on the input media types array
 def get_media_files(path, media_types):
-  for file in os.listdir(path):
-    if os.path.isfile(os.path.join(path, file)):
-      filename, file_extension = os.path.splitext(file)
+  if os.path.isdir(path):
+    for file in os.listdir(path):
+      if os.path.isfile(os.path.join(path, file)):
+        filename, file_extension = os.path.splitext(file)
 
-      if file_extension in media_types:
-        yield file
+        if file_extension in media_types:
+          yield file
+  else:
+    logging.warning('Failed to organise directory: ' + path + '. It does not exist.')
 
 # Safely move files from one directory to another, by avoiding name clashes in the destination directory
 # If there is a name clash, appends '_copy' to the filename (before the extension)
@@ -98,7 +102,7 @@ def organise_media(dir, media_types):
     safe_move(file_path, destination_path)
     file_count += 1
 
-  logging.info('Finished moving ' + str(file_count) + ' files!')
+    logging.info('Finished moving ' + str(file_count) + ' files!')
 
 # Handles confirmation prompt answer by the user by either organising the media files in the input directories in different folders, or aborting the script
 def handle_prompt_answer(answer, dirs, media_types):
@@ -106,38 +110,45 @@ def handle_prompt_answer(answer, dirs, media_types):
 
   if answer.lower() in ["yes"]:
     for dir in dirs:
-      if os.path.isdir(dir):
-        try:
-          organise_media(dir, media_types)
-        except Exception as e:
-          logging.error(e, exc_info=True)
-      else:
-        logging.warning('Failed to organise directory: ' + dir + '. It does not exist.')
+      try:
+        organise_media(dir, media_types)
+      except Exception as e:
+        logging.error(e, exc_info=True)
 
       print('')
 
   else:
     logging.info('Script aborted.')
 
-  input('\nPress any key to exit...')
-
-# Main script logic
-def main():
+# Initial operations
+def init():
   print('')
 
   config_logger()
   logging.info('Starting the organise_media script...')
 
-  config = read_config_file(CONFIG_PATH)
+  config, valid, error_msg = read_config_file(CONFIG_PATH)
+  if not valid:
+    terminate_with_error(error_msg)
+
+  return config
+
+# Main script logic
+def main():
+  config = init()
+
   target_dirs = config['folders_to_organise']
   media_types = config['media_extensions']
 
   # Confirmation prompt
   logging.info('Will organise all files with extension:\n- ' + "\n- ".join(media_types) + '\n\nin the following folders:\n- ' + "\n- ".join(target_dirs) + '\n\nby creation_date in "year/month/" directories.')
   answer = input('\nType [yes] to continue, or something else to abort\n\n>> ')
+
   handle_prompt_answer(answer, target_dirs, media_types)
 
+  input('\nPress any key to exit...')
   logging.info('Done!')
 
 # Run the script
-main()
+if __name__ == '__main__':
+  main()
