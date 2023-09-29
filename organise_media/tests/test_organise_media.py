@@ -2,7 +2,7 @@ import datetime
 import os
 import yaml
 from freezegun import freeze_time
-from organise_media import is_valid_config, read_config_file, get_media_files, safe_move, organise_media, handle_prompt_answer
+from ..organise_media import is_valid_config, read_config_file, get_media_files, safe_move, organise_media, handle_prompt_answer
 
 def test_is_valid_config_returns_false_for_wrong_input_type():
     config = ["folders_to_organise", "media_extensions"]
