@@ -2,7 +2,9 @@ import datetime
 import os
 import yaml
 from freezegun import freeze_time
-from ..organise_media import is_valid_config, read_config_file, get_media_files, safe_move, organise_media, handle_prompt_answer
+from ..organise_media.configuration_reader import is_valid_config, read_config_file
+from ..organise_media.file_operations import get_media_files, safe_move, organise_media
+from ..organise_media.user_prompt import handle_prompt_answer
 
 def test_is_valid_config_returns_false_for_wrong_input_type():
     config = ["folders_to_organise", "media_extensions"]
@@ -58,7 +60,7 @@ def test_read_config_file_returns_false_for_non_existant_config_file():
     config, valid, error_msg = read_config_file(config_file.path)
 
     assert not valid
-    assert error_msg == 'Missing configuration file "config.yaml" in the same directory as "organise_media.py". Script aborted.'
+    assert error_msg == 'Missing configuration file "config.yaml" in the same directory as "run_organise_media.py". Script aborted.'
 
 def test_read_config_file_returns_false_for_empty_yaml_file(fs):
     config_file = FakeFile("./test_dir/config.yaml")
