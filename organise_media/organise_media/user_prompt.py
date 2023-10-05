@@ -3,10 +3,9 @@ import os
 import sys
 from .configuration_reader import read_config_file
 from .file_operations import organise_media
+from .logger_config import config_logger
 
 RELATIVE_CONFIG_FILE_PATH = "../config.yaml"
-RELATIVE_LOG_DIR_PATH = "../log/"
-LOG_FILE_NAME = "organize_media.log"
 
 # Main script logic
 def run():
@@ -37,23 +36,6 @@ def init():
     terminate_with_error(error_msg)
 
   return config
-
-# Configure the logger to write to a file and to the console
-def config_logger():
-  log_dir_path = os.path.join(os.path.dirname(__file__), RELATIVE_LOG_DIR_PATH)
-
-  if not os.path.exists(log_dir_path):
-    os.makedirs(log_dir_path)
-
-  logging.basicConfig(
-    level = logging.INFO,
-    format = '%(asctime)s [%(levelname)s] %(message)s',
-    datefmt = '%Y-%m-%d %H:%M:%S',
-    handlers = [
-      logging.FileHandler(os.path.join(log_dir_path, LOG_FILE_NAME)),
-      logging.StreamHandler(sys.stdout)
-    ]
-  )
 
 # Log a fatal error and exit the script
 def terminate_with_error(error_str):
