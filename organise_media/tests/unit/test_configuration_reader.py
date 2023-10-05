@@ -56,7 +56,7 @@ def test_read_config_file_returns_false_for_non_existant_config_file():
     config, valid, error_msg = read_config_file(config_file.path)
 
     assert not valid
-    assert error_msg == 'Missing configuration file "config.yaml" in the same directory as "run_organise_media.py". Script aborted.'
+    assert error_msg == 'Missing configuration file "config.yaml" in the root directory of the project. Script aborted.'
 
 def test_read_config_file_returns_false_for_empty_yaml_file(fs):
     config_file = FakeFile("./test_dir/config.yaml")

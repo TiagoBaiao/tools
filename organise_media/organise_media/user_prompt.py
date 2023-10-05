@@ -15,7 +15,13 @@ def run():
   media_types = config['media_extensions']
 
   # Confirmation prompt
-  logging.info('Will organise all files with extension:\n- ' + "\n- ".join(media_types) + '\n\nin the following folders:\n- ' + "\n- ".join(target_dirs) + '\n\nby creation_date in "year/month/" directories.')
+  logging.info(''.join([
+    'Will organise all files with extension:\n- ',
+    '\n- '.join(media_types),
+    '\n\nin the following folders:\n- ',
+    '\n- '.join(target_dirs),
+    '\n\nby creation_date in "year/month/" directories.'
+  ]))
   answer = input('\nType [yes] to continue, or something else to abort\n\n>> ')
 
   handle_prompt_answer(answer, target_dirs, media_types)
