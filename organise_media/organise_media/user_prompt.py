@@ -1,9 +1,10 @@
 import logging
+import os
 import sys
 from .configuration_reader import read_config_file
 from .file_operations import organise_media
 
-CONFIG_PATH = "config.yaml"
+RELATIVE_CONFIG_FILE_PATH = "../config.yaml"
 
 # Main script logic
 def run():
@@ -28,7 +29,8 @@ def init():
   config_logger()
   logging.info('Starting the organise_media script...')
 
-  config, valid, error_msg = read_config_file(CONFIG_PATH)
+  config_file_path = os.path.join(os.path.dirname(__file__), RELATIVE_CONFIG_FILE_PATH)
+  config, valid, error_msg = read_config_file(config_file_path)
   if not valid:
     terminate_with_error(error_msg)
 
