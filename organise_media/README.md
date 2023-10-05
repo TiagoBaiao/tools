@@ -136,3 +136,23 @@ And we configure the script to organise `.png` files in `dir1` and `dir2`, we en
 ### Logging
 
 The log output can be found in the `log/` directory, generated in the root of the project, the first time the script is run. In subsequent runs, new log entries are appended to the log file.
+
+## Testing
+
+The project contains both unit and functional tests, which you can run using pytest.
+
+### Setup
+
+Install [pytest](https://docs.pytest.org/en/6.2.x/getting-started.html).
+
+Run the following command to install dependencies:
+
+    $ pip install -r requirements/test.txt
+
+### Run Tests
+
+    $ pytest
+
+### Debug Test Discoverability
+
+    $ pytest --collect-only
