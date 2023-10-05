@@ -139,11 +139,11 @@ The log output can be found in the `log/` directory, generated in the root of th
 
 ## Testing
 
-The project contains both unit and functional tests, which you can run using pytest.
+The project contains both unit and functional tests, which you can run using `pytest`.
 
 ### Setup
 
-Run the following command to install dependencies (including pytest):
+Run the following command to install dependencies (including `pytest`):
 
     $ pip install -r requirements/test.txt
 

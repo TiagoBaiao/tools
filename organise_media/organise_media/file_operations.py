@@ -47,6 +47,6 @@ def safe_move(src_file_path, dest_path):
     dest_file_name = dest_file_name.replace('.', '_copy.', 1)
 
   if dest_file_name != src_file_name:
-    logging.warning(f'Duplicated filename in destination directory: {dest_path}.\n  Renamed a file to: {dest_file_name}')
+    logging.warning(f'Duplicated filename in destination directory: {dest_path}\n  Renamed a file to: {dest_file_name}')
 
   shutil.move(src_file_path, os.path.join(dest_path, dest_file_name))
