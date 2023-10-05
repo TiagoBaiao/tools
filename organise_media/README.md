@@ -132,3 +132,7 @@ And we configure the script to organise `.png` files in `dir1` and `dir2`, we en
 │         └── file_04_05_2020_copy_copy.png
 ├── file_in_root.png
 ```
+
+### Logging
+
+The log output can be found in the `log/` directory, generated in the root of the project, the first time the script is run. In subsequent runs, new log entries are appended to the log file.
