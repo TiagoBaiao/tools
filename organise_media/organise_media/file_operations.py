@@ -23,7 +23,7 @@ def organise_media(dir, media_types):
     safe_move(file_path, destination_path)
     file_count += 1
 
-    logging.info(f'Finished moving {str(file_count)} files!')
+  logging.info(f'Finished moving {str(file_count)} files!')
 
 # Get the list of media files from the input directory path, based on the input media types array
 def get_media_files(dir, media_types):
