@@ -143,9 +143,7 @@ The project contains both unit and functional tests, which you can run using pyt
 
 ### Setup
 
-Install [pytest](https://docs.pytest.org/en/6.2.x/getting-started.html).
-
-Run the following command to install dependencies:
+Run the following command to install dependencies (including pytest):
 
     $ pip install -r requirements/test.txt
 
