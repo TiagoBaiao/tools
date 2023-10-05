@@ -22,7 +22,7 @@ The `organise_media` script is fairly straightforward to use. Start by configuri
 
 ### Configuration
 
-Before running the `organise_media` script make sure that a `config.yaml` file exists in the same directory. It must have the following configuration variables:
+Before running the `organise_media` script make sure that a `config.yaml` file exists in the root directory of the project. It must have the following configuration variables:
 
  - **folders_to_organise**: a list of directories where the script will look for files to organise in sub-directories
  - **media_extensions**: a list of file extensions which the script will use to mark files as eligible for organisation
@@ -45,13 +45,13 @@ If the configuration is not valid, either because the configuration file is miss
 
 ### Run
 
-    $ python organise_media.py
+    $ python run_organise_media.py
 
 ### Output
 
-After running the script, the configured directories to organise, that exist and had files eligible to be organised, should have those files moved to `year/month/` sub-directories within them, according to the file's creation_date.
+After running the script, the configured directories to organise, that exist and had files eligible to be organised, should have those files moved to `year/month/` sub-directories within them, according to the files' creation_date.
 
-For further visual organisation, when using a file explorer that displays folders ordered alphabetically, the month folder names are prefixed with their respective ordinal number, e.g. `01_January, 02_February, etc...`
+For better accessibility, when using a file explorer that displays folders ordered alphabetically, the month folder names are prefixed with their respective ordinal number, e.g. `01_January, 02_February, etc...`
 
 As an example, if we start with a folder structure that looks like this:
 
@@ -95,4 +95,40 @@ And we configure the script to organise `.png` files in `dir1` and `dir2`, we en
 ├── file_in_root.png
 ```
 
-Filename clashes when trying to move a file are resolved by appending `_copy` to the filename before the extension.
+Filename clashes when trying to move a file are resolved by appending `_copy` to the filename before the extension. No files are overwritten in the process.
+
+As an example, if we start with a folder structure that looks like this:
+
+```
+.
+├── dir1
+│   ├── file_01_11_2019.png
+│   ├── 2019
+│      ├── 11_November
+│         └── file_01_11_2019.png
+├── dir2
+│   ├── file_04_05_2020.png
+│   ├── 2020
+│      └── 05_May
+│         └── file_04_05_2020.png
+│         └── file_04_05_2020_copy.png
+├── file_in_root.png
+```
+
+And we configure the script to organise `.png` files in `dir1` and `dir2`, we end up with the following tree structure after running the script:
+
+```
+.
+├── dir1
+│   ├── 2019
+│      ├── 11_November
+│         └── file_01_11_2019.png
+│         └── file_01_11_2019_copy.png
+├── dir2
+│   ├── 2020
+│      └── 05_May
+│         └── file_04_05_2020.png
+│         └── file_04_05_2020_copy.png
+│         └── file_04_05_2020_copy_copy.png
+├── file_in_root.png
+```
